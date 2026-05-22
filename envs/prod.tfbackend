@@ -1,0 +1,5 @@
+bucket       = "arenko-tftest-tfstate-337164669104"
+key          = "root/terraform.tfstate"
+region       = "eu-west-2"
+encrypt      = true
+use_lockfile = true
