@@ -55,3 +55,13 @@ describes a single logical unit of work.
 - Fixed nginx container port `81` -> `80`
 - Added cloudwatch log group and logging configuration for the ECS Task.
 - if the service is running in PROD then we always use 2 containers for High-Availability.
+
+**RDS (`rds.tf`, `kms.tf`)**
+
+- Replaced the inherited `aws_db_instance` (Postgres 13, `db.t2.micro`, hardcoded password, in public subnets) with an `aws_rds_cluster` running Aurora Serverless v2 Postgres 17.7 in the database subnets. Postgres13 was EOL in AWS on 28th Feb 2026. Using the current stable version in RDS.
+- `manage_master_user_password = true` — RDS itself generates stores the master credential into Secrets Manager. Password never enters Terraform state.
+- Customer-managed KMS key (`kms.tf`) used for storage encryption, root-account principal policy, 7-day deletion window, automatic key rotation. Data should be encrypted at rest. Current RDS versions enforce enncryption in transit by using rds.force_ssl as true.
+- IAM role for RDS Enhanced Monitoring (trust principal `monitoring.rds.amazonaws.com`, AWS-managed policy attached).
+- Added Performance Insights and Enhanced Monitoring (60 s) enabled on every cluster instance.
+- Optional second cluster instance gated on `create_instance_b`, this is for the scenrio when we want read-replica in non-prod environments. Prod environment always runs atleast 2 instances for High Availability.
+- Added `deletion_protection = true`. An accidental terraform destroy should never be able to delete the data/database.
