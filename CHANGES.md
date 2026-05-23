@@ -65,3 +65,25 @@ describes a single logical unit of work.
 - Added Performance Insights and Enhanced Monitoring (60 s) enabled on every cluster instance.
 - Optional second cluster instance gated on `create_instance_b`, this is for the scenrio when we want read-replica in non-prod environments. Prod environment always runs atleast 2 instances for High Availability.
 - Added `deletion_protection = true`. An accidental terraform destroy should never be able to delete the data/database.
+
+## PR #3
+
+- Was supposed to be a bug-fix, but it wasn't. The output will be corrected in PR #4
+
+## PR #4 - Extracted RDS into a module
+
+### What changed
+
+**New module: `modules/rds-aurora/`**
+
+- Created a Module for RDS Aurora to demonstrate reusability.
+- RDS and KMS resources now reside in the main.tf of the module.
+- Module outputs: writer endpoint, reader endpoint, master user secret ARN, security group ID, KMS key ARN.
+
+**Root (`rds.tf`, `kms.tf`)**
+
+- `rds.tf` collapsed to a single `module "rds"` block plus the retained `locals.config` map that supplies env-specific cluster details.
+- `kms.tf` deleted at the root — the CMK now lives inside the module alongside the cluster it encrypts.
+- State migration via nine `terraform state mv` calls.
+- No changes to terraform plan for RDS
+- Added Database enpoints to output
