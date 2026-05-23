@@ -47,3 +47,11 @@ describes a single logical unit of work.
 - Fixed `var.env` -> `var.environment` typo.
 - Created a new security group for ALB to allow ingress on port 80 and 443. We do not have a domain name, so we cannot issue an ACM certificate and hence port 443 cannot be used.
 - We do not want to make use of aws_lb_target_group_attachment, it will be created by the ECS service.
+- Created and security group rule for egress to the ECS service.
+
+**ECS (`main.tf`)**
+
+- Added permissions(AmazonECSTaskExecutionRolePolicy) for the `ecs_execution_role`
+- Fixed nginx container port `81` -> `80`
+- Added cloudwatch log group and logging configuration for the ECS Task.
+- if the service is running in PROD then we always use 2 containers for High-Availability.
