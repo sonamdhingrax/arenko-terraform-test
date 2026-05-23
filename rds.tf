@@ -80,8 +80,8 @@ resource "aws_rds_cluster" "postgresql_cluster" {
   performance_insights_enabled          = true
   performance_insights_retention_period = 7
 
-  deletion_protection = false
-  skip_final_snapshot = true
+  deletion_protection = true
+  skip_final_snapshot = false
 
   dynamic "serverlessv2_scaling_configuration" {
     for_each = local.config[var.environment].serverlessv2_scaling_configuration != null ? [1] : []
