@@ -41,3 +41,9 @@ describes a single logical unit of work.
 - Created a regional NAT GW instead of zonal
 - Allowed for expansion/extension to a third AZ.
 - Separate Route Tables for each tier.
+
+**ALB (`lb.tf`)**
+
+- Fixed `var.env` -> `var.environment` typo.
+- Created a new security group for ALB to allow ingress on port 80 and 443. We do not have a domain name, so we cannot issue an ACM certificate and hence port 443 cannot be used.
+- We do not want to make use of aws_lb_target_group_attachment, it will be created by the ECS service.
