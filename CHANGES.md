@@ -28,3 +28,16 @@ describes a single logical unit of work.
 - Renamed the deployed environment from `test` to `develop` in `terraform.tfvars.json` to match the backend module convention.
 - Added `envs/develop.tfbackend` so `terraform init -backend-config=envs/develop.tfbackend` points the root at `s3://arenko-tftest-tfstate-822725963102/root/terraform.tfstate`.
 - Initialized terraform with `terraform init -backend-config=envs/develop.tfbackend` so that all changes from now on use the remote backend.
+
+## PR #2 - Fixed bugs and updates for improving security
+
+### What changed
+
+**VPC and networking (`vpc.tf`)**
+
+- Lifted the VPC out of `main.tf` into a new `vpc.tf` for separation of concerns and that it can later be promoted to a module.
+- Fixed the subnet CIDR range clashes and added config for prod as well.
+- Renamed Subnets for clarity. `Web` and `Public` convey the same meaning. Used `Public` and `Private` names.
+- Created a regional NAT GW instead of zonal
+- Allowed for expansion/extension to a third AZ.
+- Separate Route Tables for each tier.
