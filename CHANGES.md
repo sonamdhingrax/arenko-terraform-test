@@ -28,3 +28,40 @@ describes a single logical unit of work.
 - Renamed the deployed environment from `test` to `develop` in `terraform.tfvars.json` to match the backend module convention.
 - Added `envs/develop.tfbackend` so `terraform init -backend-config=envs/develop.tfbackend` points the root at `s3://arenko-tftest-tfstate-822725963102/root/terraform.tfstate`.
 - Initialized terraform with `terraform init -backend-config=envs/develop.tfbackend` so that all changes from now on use the remote backend.
+
+## PR #2 - Fixed bugs and updates for improving security
+
+### What changed
+
+**VPC and networking (`vpc.tf`)**
+
+- Lifted the VPC out of `main.tf` into a new `vpc.tf` for separation of concerns and that it can later be promoted to a module.
+- Fixed the subnet CIDR range clashes and added config for prod as well.
+- Renamed Subnets for clarity. `Web` and `Public` convey the same meaning. Used `Public` and `Private` names.
+- Created a regional NAT GW instead of zonal
+- Allowed for expansion/extension to a third AZ.
+- Separate Route Tables for each tier.
+
+**ALB (`lb.tf`)**
+
+- Fixed `var.env` -> `var.environment` typo.
+- Created a new security group for ALB to allow ingress on port 80 and 443. We do not have a domain name, so we cannot issue an ACM certificate and hence port 443 cannot be used.
+- We do not want to make use of aws_lb_target_group_attachment, it will be created by the ECS service.
+- Created and security group rule for egress to the ECS service.
+
+**ECS (`main.tf`)**
+
+- Added permissions(AmazonECSTaskExecutionRolePolicy) for the `ecs_execution_role`
+- Fixed nginx container port `81` -> `80`
+- Added cloudwatch log group and logging configuration for the ECS Task.
+- if the service is running in PROD then we always use 2 containers for High-Availability.
+
+**RDS (`rds.tf`, `kms.tf`)**
+
+- Replaced the inherited `aws_db_instance` (Postgres 13, `db.t2.micro`, hardcoded password, in public subnets) with an `aws_rds_cluster` running Aurora Serverless v2 Postgres 17.7 in the database subnets. Postgres13 was EOL in AWS on 28th Feb 2026. Using the current stable version in RDS.
+- `manage_master_user_password = true` — RDS itself generates stores the master credential into Secrets Manager. Password never enters Terraform state.
+- Customer-managed KMS key (`kms.tf`) used for storage encryption, root-account principal policy, 7-day deletion window, automatic key rotation. Data should be encrypted at rest. Current RDS versions enforce enncryption in transit by using rds.force_ssl as true.
+- IAM role for RDS Enhanced Monitoring (trust principal `monitoring.rds.amazonaws.com`, AWS-managed policy attached).
+- Added Performance Insights and Enhanced Monitoring (60 s) enabled on every cluster instance.
+- Optional second cluster instance gated on `create_instance_b`, this is for the scenrio when we want read-replica in non-prod environments. Prod environment always runs atleast 2 instances for High Availability.
+- Added `deletion_protection = true`. An accidental terraform destroy should never be able to delete the data/database.
