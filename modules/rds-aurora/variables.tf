@@ -41,3 +41,15 @@ variable "create_instance_b" {
   type        = bool
   default     = false
 }
+
+variable "deletion_protection" {
+  description = "Whether to enable deletion protection for the cluster."
+  type        = bool
+  default     = true
+}
+
+variable "skip_final_snapshot" {
+  description = "Whether to skip the final snapshot when deleting the cluster."
+  type        = bool
+  default     = false
+}
